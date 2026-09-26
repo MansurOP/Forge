@@ -1,0 +1,11 @@
+
+# --- Heavy folders that should be ignored ---
+node_modules/
+frontend/.next/
+backend/.venv/
+backend/.cache/
+frontend/.next/
+frontend/.turbo/
+frontend/.vercel/
+frontend/.dist/
+frontend/.build/
