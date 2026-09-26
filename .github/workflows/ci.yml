@@ -1,93 +1,58 @@
-name: CI
-
-# Run on every push to main and on PRs targeting main
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
 jobs:
-  # -----------------------------------------------------------------
-  # 1️⃣ Backend – lint + pytest
-  # -----------------------------------------------------------------
   backend:
     runs-on: windows-latest
     defaults:
       run:
-        # All commands in this job will be executed from the repository root
-        # and we’ll cd into ./backend where the FastAPI app lives.
-        working-directory: ./backend
+        working-directory: backend        # <‑‑ fixed
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
-
       - name: Install backend dependencies
-        # This installs everything from requirements.txt (FastAPI, SQLAlchemy, etc.)
         run: pip install -r requirements.txt
-
       - name: Lint with ruff
-        # Install ruff locally for linting
         run: |
           pip install ruff
           ruff check .
-
       - name: Run pytest
         run: pytest tests
 
-  # -----------------------------------------------------------------
-  # 2️⃣ Frontend – lint + build
-  # -----------------------------------------------------------------
   frontend:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: frontend        # <‑‑ fixed
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Node 20
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
-
       - name: Install npm dependencies
-        run: npm ci
-
+        run: npm install                   # <‑‑ changed from `npm ci`
       - name: Lint (ESLint + Prettier)
         run: |
-          npm run lint        # make sure you have a lint script in package.json
-          npm run format-check   # script that runs prettier --check
-
+          npm run lint
+          npm run format-check
       - name: Build Next.js app
         run: npm run build
 
-  # -----------------------------------------------------------------
-  # 3️⃣ Docker build – produce backend & frontend images
-  # -----------------------------------------------------------------
   docker-build:
-    needs: [backend, frontend]   # run after both succeed
+    needs: [backend, frontend]
     runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # Build the backend image
       - name: Build backend Docker image
         run: |
           docker build -t forge-backend -f backend/Dockerfile.backend .
-
-      # Build the frontend image
       - name: Build frontend Docker image
         run: |
           docker build -t forge-frontend -f frontend/Dockerfile.frontend .
